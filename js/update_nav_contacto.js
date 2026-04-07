@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const dir = 'C:/Proyectos/html';
+const dir = 'C:/CIS2026/html';
 const files = fs.readdirSync(dir).filter(f => f.endsWith('.html'));
 
 let count = 0;

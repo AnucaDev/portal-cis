@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const baseDir = 'C:/Proyectos';
+const baseDir = 'C:/CIS2026';
 const htmlDir = path.join(baseDir, 'html');
 const cssPath = path.join(baseDir, 'css', 'styles.css');
 const jsPath = path.join(baseDir, 'js', 'main.js');

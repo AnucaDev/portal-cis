@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const imgPath = 'C:/Proyectos/imagenes/logo.svg';
+const imgPath = 'C:/CIS2026/imagenes/logo.svg';
 
 if (!fs.existsSync(imgPath)) {
   console.error('No se encontró logo.svg en imagenes/. Coloca el archivo antes de ejecutar este script.');
@@ -9,7 +9,7 @@ if (!fs.existsSync(imgPath)) {
 }
 
 // Limpiar todos los archivos HTML y reemplazar SVG inline por <img>
-const dir = 'C:/Proyectos/html';
+const dir = 'C:/CIS2026/html';
 const files = fs.readdirSync(dir).filter(f => f.endsWith('.html'));
 
 // Expresión regular que atrapa la gran etiqueta <svg ...> </svg>

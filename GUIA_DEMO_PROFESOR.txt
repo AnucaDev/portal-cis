@@ -43,7 +43,7 @@ Fecha: Abril 2026
     → Pulsa "Crear"
  4. Con "cis_madrid" seleccionada, ve a la pestaña "Importar"
  5. Haz clic en "Seleccionar archivo"
-    → Busca y selecciona:  C:\Proyectos\cis_madrid.sql
+    → Busca y selecciona:  C:\CIS2026\cis_madrid.sql
  6. Pulsa "Importar" (botón al final de la página)
     → Debe aparecer un mensaje verde de éxito
 
@@ -71,7 +71,7 @@ Fecha: Abril 2026
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
  Doble clic en el archivo:
-    C:\Proyectos\api\instalar_dependencias.bat
+    C:\CIS2026\api\instalar_dependencias.bat
 
  → Se abrirá una ventana negra y se instalará todo automáticamente.
  → Espera a que termine y se cierre.
@@ -82,7 +82,7 @@ Fecha: Abril 2026
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
  Doble clic en el archivo:
-    C:\Proyectos\api\ejecutar_api.bat
+    C:\CIS2026\api\ejecutar_api.bat
 
  → Se abrirá una ventana negra. Debes ver:
 

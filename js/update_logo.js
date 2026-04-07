@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const dir = 'C:/Proyectos/html';
+const dir = 'C:/CIS2026/html';
 const files = fs.readdirSync(dir).filter(f => f.endsWith('.html'));
 
 const oldLogoRegex = /<svg class="logo-svg" viewBox="0 0 100 100" xmlns="http:\/\/www\.w3\.org\/2000\/svg">.*?<\/svg>\s*<div class="logo-text"><h1>CIS<\/h1><span>Centro de Intervención Sicoeducativa<\/span><\/div>/gs;
