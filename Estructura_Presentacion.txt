@@ -1,0 +1,42 @@
+Estructura para la Presentación del Proyecto: CIS Madrid
+
+DIAPOSITIVA 1: PORTADA
+- Título grande: CIS Madrid - Portal Psicoeducativo
+- Subtítulo: Plataforma integral de gestión para familias y profesionales
+- Tus datos: Tu nombre, rol en el proyecto y fecha.
+
+DIAPOSITIVA 2: EL CONTEXTO Y EL PROBLEMA
+- Contexto: El CIS Madrid ofrece servicios de psicología, terapia ocupacional y logopedia, además de la "Escuela de Padres".
+- El Problema: La gestión de citas, el seguimiento de pacientes y la inscripción a cursos se hacía de forma manual, lenta y propensa a errores, con una mala experiencia de usuario para las familias.
+
+DIAPOSITIVA 3: LA SOLUCIÓN
+- Qué es: Una plataforma web completa (Front-end + Back-end).
+- Objetivo: Automatizar reservas, centralizar expedientes e interconectar a la clínica con los tutores legales de forma segura y sencilla.
+
+DIAPOSITIVA 4: USUARIOS Y ROLES (PARA QUIÉN ESTÁ HECHO)
+- Familias: Pueden registrar a sus hijos, pedir citas, ver el historial y apuntarse a cursos.
+- Profesionales: Tienen su propia área para gestionar sus pacientes, diagnósticos y ver su agenda.
+- Administrador: Control total sobre usuarios, estadísticas globales de citas y gestión interna de la plataforma.
+
+DIAPOSITIVA 5: FUNCIONALIDADES PRINCIPALES
+- Sistema de inicio de sesión y registro seguro (Login/Auth).
+- Formularios dinámicos para solicitud de Citas y Cursos con confirmación automática por correo electrónico.
+- Paneles de control (Dashboards) personalizados según el tipo de usuario.
+- Vinculación de parentesco (consentimientos entre profesional y tutor legal).
+
+DIAPOSITIVA 6: ARQUITECTURA Y STACK TECNOLÓGICO
+- Frontend: HTML5, CSS3, Vanilla JavaScript (Diseño Responsive).
+- Backend: Node.js con Express.js (API REST).
+- Base de Datos: MySQL (con tablas relacionales para citas, pacientes, profesionales y cursos).
+- Herramientas extra: Nodemailer (para envíos de emails), Git (Control de versiones).
+
+DIAPOSITIVA 7: DEMOSTRACIÓN (RECOMENDADA)
+- Tiempo de Demo: Salir del PowerPoint para enseñar la web funcionando en vivo (haciendo una reserva o mostrando el login).
+- Alternativa: Si no hay internet o prefieres no arriesgar, pon 3 o 4 capturas de pantalla clave (Portada, Formulario de citas, Panel de la Familia, Panel de Admin).
+
+DIAPOSITIVA 8: PRÓXIMOS PASOS / FUTURAS MEJORAS
+- Qué te gustaría añadirle en el futuro (Ej: Pagos online con tarjeta, videoconsultas integradas, notificaciones por WhatsApp o SMS, etc.).
+
+DIAPOSITIVA 9: CONCLUSIÓN Y PREGUNTAS
+- Cierre: Breve resumen del valor aportado ("Una web que moderniza la clínica CIS Madrid").
+- Despedida: ¡Gracias por vuestra atención. ¿Alguna pregunta?

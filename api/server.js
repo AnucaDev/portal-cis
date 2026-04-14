@@ -29,10 +29,12 @@ app.use(cors({
 
 // Servir archivos estáticos del proyecto (html, css, js, imagenes)
 const ROOT = path.resolve(__dirname, '..');
-app.use('/html',      express.static(path.join(ROOT, 'html')));
+// Primero servir directorios desde la raíz (imagenes, css, js)
 app.use('/css',       express.static(path.join(ROOT, 'css')));
 app.use('/js',        express.static(path.join(ROOT, 'js')));
 app.use('/imagenes',  express.static(path.join(ROOT, 'imagenes')));
+// Luego servir HTML desde la carpeta html
+app.use(express.static(path.join(ROOT, 'html')));
 // Ruta raíz → index.html
 app.get('/', (_req, res) => res.sendFile(path.join(ROOT, 'html', 'index.html')));
 

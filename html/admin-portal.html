@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Panel de Administración – CIS Madrid</title>
-  <link rel="stylesheet" href="../css/styles.css" />
-  <link rel="stylesheet" href="../css/estilos_portal.css" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/estilos_portal.css" />
 </head>
 <body id="adminApp">
 
@@ -13,12 +13,12 @@
   <header class="portal-header admin-header">
     <nav class="container">
       <a href="index.html" class="logo">
-        <img class="logo-svg" src="../imagenes/logo.svg" alt="Logotipo CIS" />
+        <img class="logo-svg" src="/imagenes/logo.svg" alt="Logotipo CIS" />
         <div class="logo-text"><h1>CIS</h1><span>Panel de Administración</span></div>
       </a>
       <ul class="nav-links">
         <li><a href="index.html">Web Principal</a></li>
-        <li><button class="btn btn-outline btn-logout" id="adminLogoutBtn">🚶 Cerrar sesión</button></li>
+        <li><button class="btn btn-outline btn-logout" id="adminLogoutBtn">🔒 Cerrar sesión</button></li>
       </ul>
     </nav>
   </header>
@@ -41,9 +41,9 @@
         <nav class="admin-nav" aria-label="Secciones admin">
           <button class="admin-nav-btn active" data-section="stats">📊 Dashboard</button>
           <button class="admin-nav-btn" data-section="usuarios">👥 Usuarios</button>
-          <button class="admin-nav-btn" data-section="pacientes">👶 Pacientes</button>
+          <button class="admin-nav-btn" data-section="pacientes">🧑‍🤝‍🧑 Pacientes</button>
           <button class="admin-nav-btn" data-section="citas">📅 Citas</button>
-          <button class="admin-nav-btn" data-section="consentimientos">✅ Consentimientos</button>
+          <button class="admin-nav-btn" data-section="consentimientos">📝 Consentimientos</button>
         </nav>
 
         <button class="logout-btn" id="adminLogoutBtnSide">Cerrar Sesión</button>
@@ -52,7 +52,7 @@
       <!-- MAIN CONTENT -->
       <main class="dashboard-content" id="adminMain">
 
-        <!-- ── SECCIÓN: DASHBOARD STATS ── -->
+        <!-- -- SECCIÓN: DASHBOARD STATS -- -->
         <section class="admin-section" id="section-stats">
           <div class="dash-header">
             <h3>📊 Dashboard — Resumen del centro</h3>
@@ -62,7 +62,7 @@
           </div>
         </section>
 
-        <!-- ── SECCIÓN: USUARIOS ── -->
+        <!-- -- SECCIÓN: USUARIOS -- -->
         <section class="admin-section hidden" id="section-usuarios">
           <div class="dash-header">
             <h3>👥 Gestión de Usuarios</h3>
@@ -72,17 +72,17 @@
           </div>
         </section>
 
-        <!-- ── SECCIÓN: PACIENTES ── -->
+        <!-- -- SECCIÓN: PACIENTES -- -->
         <section class="admin-section hidden" id="section-pacientes">
           <div class="dash-header">
-            <h3>👶 Gestión de Pacientes</h3>
+            <h3>🧑‍🤝‍🧑 Gestión de Pacientes</h3>
           </div>
           <div id="tablaPacientes" aria-live="polite">
             <p class="portal-empty">Cargando pacientes...</p>
           </div>
         </section>
 
-        <!-- ── SECCIÓN: CITAS ── -->
+        <!-- -- SECCIÓN: CITAS -- -->
         <section class="admin-section hidden" id="section-citas">
           <div class="dash-header">
             <h3>📅 Gestión de Citas</h3>
@@ -92,10 +92,10 @@
           </div>
         </section>
 
-        <!-- ── SECCIÓN: CONSENTIMIENTOS ── -->
+        <!-- -- SECCIÓN: CONSENTIMIENTOS -- -->
         <section class="admin-section hidden" id="section-consentimientos">
           <div class="dash-header">
-            <h3>✅ Gestión de Consentimientos</h3>
+            <h3>📝 Gestión de Consentimientos</h3>
           </div>
           <div id="tablaConsentimientos" aria-live="polite">
             <p class="portal-empty">Cargando consentimientos...</p>
@@ -106,7 +106,11 @@
     </div>
   </div>
 
-  <script src="../js/admin-app.js"></script>
-  <script src="../js/config.js"></script>`n<script defer src="../js/main.js"></script>
+  <script src="/js/admin-app.js"></script>
+  <script src="/js/config.js"></script>
+<script defer src="/js/main.js"></script>
 </body>
 </html>
+
+
+
