@@ -217,3 +217,9 @@ Fecha: Abril 2026
  2. En XAMPP, pulsa STOP en "MySQL" y en "Apache"
 
 ════════════════════════════════════════════════════════════════
+Credenciales sensibles
+No guardar claves, tokens ni contrasenas reales en este archivo.
+
+Si necesitas preparar una demo:
+1. Configura las variables en Railway.
+2. Verifica el acceso antes de presentar.

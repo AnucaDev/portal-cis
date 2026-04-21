@@ -6,7 +6,14 @@
 (function () {
   'use strict';
 
-  const API = window.API_BASE;
+  function resolveApiBase() {
+    if (typeof window.API_BASE === 'string') return window.API_BASE;
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1') return 'http://localhost:3001';
+    return '';
+  }
+
+  const API = resolveApiBase();
 
   /* ----------------------------------------------------------
      GUARDIA: solo admins
@@ -16,7 +23,25 @@
     window.location.href = 'login-admin.html';
     return;
   }
-  const admin = JSON.parse(sesionRaw);
+  let admin;
+  try {
+    admin = JSON.parse(sesionRaw);
+  } catch (_) {
+    sessionStorage.removeItem('cis_admin');
+    window.location.href = 'login-admin.html';
+    return;
+  }
+
+  const adminId = Number(admin?.id);
+  if (!Number.isInteger(adminId) || adminId <= 0) {
+    console.warn('[ADMIN-APP] Sesion admin invalida: falta id valido.', admin);
+    sessionStorage.removeItem('cis_admin');
+    window.location.href = 'login-admin.html';
+    return;
+  }
+
+  const adminNombre = String(admin?.nombre || 'Administrador').trim() || 'Administrador';
+  const adminEmail = String(admin?.email || '').trim();
 
   /* ----------------------------------------------------------
      UTILIDADES
@@ -44,6 +69,34 @@
     return `<span class="apt-status ${mapa[estado] || ''}">${esc(estado)}</span>`;
   }
 
+  async function fetchJsonSafe(url, options) {
+    const resp = await fetch(url, options);
+    let data = null;
+    try {
+      data = await resp.json();
+    } catch (_) {
+      data = null;
+    }
+
+    if (!resp.ok) {
+      return {
+        ok: false,
+        status: resp.status,
+        mensaje: data?.mensaje || data?.error || `HTTP ${resp.status}`,
+      };
+    }
+
+    if (!data || data.ok === false) {
+      return {
+        ok: false,
+        status: resp.status,
+        mensaje: data?.mensaje || 'Respuesta no valida del servidor.',
+      };
+    }
+
+    return data;
+  }
+
   /* ----------------------------------------------------------
      PERFIL ADMIN (SIDEBAR)
   ---------------------------------------------------------- */
@@ -51,10 +104,15 @@
     const avatar  = document.getElementById('adminAvatar');
     const nombre  = document.getElementById('adminNombre');
     const emailEl = document.getElementById('adminEmail');
-    const initials = admin.nombre.split(' ').slice(0, 2).map(n => n[0]).join('+');
+    const initials = adminNombre
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map(n => n[0].toUpperCase())
+      .join('+') || 'AD';
     if (avatar)  avatar.src       = `https://ui-avatars.com/api/?name=${initials}&background=c0392b&color=fff&size=150`;
-    if (nombre)  nombre.textContent = admin.nombre;
-    if (emailEl) emailEl.textContent = `✉️ ${admin.email}`;
+    if (nombre)  nombre.textContent = adminNombre;
+    if (emailEl) emailEl.textContent = adminEmail ? `✉️ ${adminEmail}` : '✉️ Sin correo';
   }
 
   /* ----------------------------------------------------------
@@ -94,9 +152,11 @@
   async function cargarStats() {
     const grid = document.getElementById('statsGrid');
     try {
-      const resp = await fetch(`${API}/api/admin/stats?adminId=${admin.id}`);
-      const d    = await resp.json();
-      if (!d.ok) { grid.innerHTML = '<p class="portal-empty">Error al cargar estadísticas.</p>'; return; }
+      const d = await fetchJsonSafe(`${API}/api/admin/stats?adminId=${adminId}`);
+      if (!d.ok) {
+        grid.innerHTML = `<p class="portal-empty">Error al cargar estadísticas: ${esc(d.mensaje)}</p>`;
+        return;
+      }
 
       grid.innerHTML = `
         <div class="stat-card"><span class="stat-val">${d.totalUsuarios}</span><span class="stat-label">Usuarios totales</span></div>
@@ -119,9 +179,12 @@
   async function cargarUsuarios() {
     const cont = document.getElementById('tablaUsuarios');
     try {
-      const resp = await fetch(`${API}/api/admin/usuarios?adminId=${admin.id}`);
-      const d    = await resp.json();
-      if (!d.ok || d.usuarios.length === 0) {
+      const d = await fetchJsonSafe(`${API}/api/admin/usuarios?adminId=${adminId}`);
+      if (!d.ok) {
+        cont.innerHTML = `<p class="portal-empty">Error al cargar usuarios: ${esc(d.mensaje)}</p>`;
+        return;
+      }
+      if (d.usuarios.length === 0) {
         cont.innerHTML = '<p class="portal-empty">No hay usuarios registrados.</p>'; return;
       }
 
@@ -163,18 +226,18 @@
         btn.disabled = true;
         btn.textContent = '...';
 
-        const resp = await fetch(`${API}/api/admin/usuarios/${id}/toggle`, {
+        const r = await fetchJsonSafe(`${API}/api/admin/usuarios/${id}/toggle`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ adminId: admin.id }),
+          body: JSON.stringify({ adminId }),
         });
-        const r = await resp.json();
         if (r.ok) {
           loaded.delete('usuarios');
           cargarUsuarios();
         } else {
           btn.disabled = false;
           btn.textContent = 'Error';
+          console.warn('[ADMIN-APP] Toggle usuario fallo:', r.mensaje);
         }
       });
 
@@ -189,9 +252,12 @@
   async function cargarPacientes() {
     const cont = document.getElementById('tablaPacientes');
     try {
-      const resp = await fetch(`${API}/api/admin/pacientes?adminId=${admin.id}`);
-      const d    = await resp.json();
-      if (!d.ok || d.pacientes.length === 0) {
+      const d = await fetchJsonSafe(`${API}/api/admin/pacientes?adminId=${adminId}`);
+      if (!d.ok) {
+        cont.innerHTML = `<p class="portal-empty">Error al cargar pacientes: ${esc(d.mensaje)}</p>`;
+        return;
+      }
+      if (d.pacientes.length === 0) {
         cont.innerHTML = '<p class="portal-empty">No hay pacientes registrados.</p>'; return;
       }
 
@@ -227,9 +293,12 @@
   async function cargarCitas() {
     const cont = document.getElementById('tablaCitas');
     try {
-      const resp = await fetch(`${API}/api/admin/citas?adminId=${admin.id}`);
-      const d    = await resp.json();
-      if (!d.ok || d.citas.length === 0) {
+      const d = await fetchJsonSafe(`${API}/api/admin/citas?adminId=${adminId}`);
+      if (!d.ok) {
+        cont.innerHTML = `<p class="portal-empty">Error al cargar citas: ${esc(d.mensaje)}</p>`;
+        return;
+      }
+      if (d.citas.length === 0) {
         cont.innerHTML = '<p class="portal-empty">No hay citas registradas.</p>'; return;
       }
 
@@ -269,14 +338,18 @@
         const estado = sel.value;
         sel.disabled = true;
 
-        await fetch(`${API}/api/admin/citas/${id}/estado`, {
+        const r = await fetchJsonSafe(`${API}/api/admin/citas/${id}/estado`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ adminId: admin.id, estado }),
+          body: JSON.stringify({ adminId, estado }),
         });
         sel.disabled = false;
-        loaded.delete('citas');
-        cargarCitas();
+        if (r.ok) {
+          loaded.delete('citas');
+          cargarCitas();
+        } else {
+          console.warn('[ADMIN-APP] Cambio estado cita fallo:', r.mensaje);
+        }
       });
 
     } catch (_) {
@@ -290,9 +363,12 @@
   async function cargarConsentimientos() {
     const cont = document.getElementById('tablaConsentimientos');
     try {
-      const resp = await fetch(`${API}/api/admin/consentimientos?adminId=${admin.id}`);
-      const d    = await resp.json();
-      if (!d.ok || d.consentimientos.length === 0) {
+      const d = await fetchJsonSafe(`${API}/api/admin/consentimientos?adminId=${adminId}`);
+      if (!d.ok) {
+        cont.innerHTML = `<p class="portal-empty">Error al cargar consentimientos: ${esc(d.mensaje)}</p>`;
+        return;
+      }
+      if (d.consentimientos.length === 0) {
         cont.innerHTML = '<p class="portal-empty">No hay consentimientos registrados.</p>'; return;
       }
 

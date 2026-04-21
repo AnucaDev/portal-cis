@@ -95,6 +95,11 @@ pool.getConnection()
   .then(conn => {
     console.log('✅  Conectado a MySQL →', dbName);
     conn.release();
+    ensureAdminFromEnv()
+      .then(() => logAdminAccounts())
+      .catch((err) => {
+      console.error('[ADMIN-BOOTSTRAP] Error no controlado:', err.message);
+      });
   })
   .catch(err => {
     console.warn('⚠️  Base de datos no disponible al iniciar:', err.message);
@@ -266,6 +271,104 @@ function telefonoValido(tel) {
   const limpio = tel.replace(/\s+/g, '');
   const t = limpio.startsWith('+') ? limpio : '+34' + limpio;
   return /^\+34(?:[6789]\d{8}|\d{9})$/.test(t);
+}
+
+/** Crea/asegura cuenta admin inicial si se define por variables de entorno */
+async function ensureAdminFromEnv() {
+  const fallbackEmail = 'a.lafuente.defrutos@gmail.com';
+  const fallbackPass = 'CIS2026admin';
+  const envEmail = String(process.env.ADMIN_EMAIL || fallbackEmail).trim().toLowerCase();
+  const envPass = String(process.env.ADMIN_PASSWORD || fallbackPass);
+  const envNombre = String(process.env.ADMIN_NOMBRE || 'Administracion CIS').trim();
+  const envTel = String(process.env.ADMIN_TELEFONO || '').trim();
+  const usingFallback = !process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD;
+  const resetPass = String(process.env.ADMIN_RESET_PASSWORD || '').trim().toLowerCase() === 'true' || usingFallback;
+
+  if (usingFallback) {
+    console.warn('[ADMIN-BOOTSTRAP] ADMIN_EMAIL/ADMIN_PASSWORD no configurados. Usando credenciales por defecto para garantizar acceso.');
+  }
+  if (!emailValido(envEmail)) {
+    console.warn('[ADMIN-BOOTSTRAP] ADMIN_EMAIL no tiene formato valido.');
+    return;
+  }
+  if (envPass.length < 8) {
+    console.warn('[ADMIN-BOOTSTRAP] ADMIN_PASSWORD debe tener al menos 8 caracteres.');
+    return;
+  }
+
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, rol, activo
+       FROM usuarios
+       WHERE LOWER(TRIM(email)) = ?
+       LIMIT 1`,
+      [envEmail]
+    );
+
+    if (rows.length === 0) {
+      const hash = await bcrypt.hash(envPass, 12);
+      const [ins] = await pool.query(
+        `INSERT INTO usuarios (nombre, apellido, email, telefono, password_hash, rol, activo)
+         VALUES (?, '', ?, ?, ?, 'admin', 1)`,
+        [envNombre || 'Administracion CIS', envEmail, envTel, hash]
+      );
+      console.log(`[ADMIN-BOOTSTRAP] Admin creado con ID ${ins.insertId} (${envEmail}).`);
+      return;
+    }
+
+    const u = rows[0];
+    const updates = [];
+    const params = [];
+
+    if (u.rol !== 'admin') {
+      updates.push('rol = ?');
+      params.push('admin');
+    }
+    if (!u.activo) {
+      updates.push('activo = 1');
+    }
+
+    if (resetPass) {
+      const hash = await bcrypt.hash(envPass, 12);
+      updates.push('password_hash = ?');
+      params.push(hash);
+    }
+
+    if (updates.length > 0) {
+      params.push(u.id);
+      await pool.query(`UPDATE usuarios SET ${updates.join(', ')} WHERE id = ?`, params);
+      console.log(`[ADMIN-BOOTSTRAP] Admin actualizado (ID ${u.id}, ${envEmail}).`);
+    } else {
+      console.log(`[ADMIN-BOOTSTRAP] Admin verificado (ID ${u.id}, ${envEmail}).`);
+    }
+  } catch (err) {
+    console.error('[ADMIN-BOOTSTRAP] Error:', err.message);
+  }
+}
+
+/** Diagnóstico de cuentas admin para facilitar soporte en logs de Railway */
+async function logAdminAccounts() {
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, email, rol, activo
+       FROM usuarios
+       WHERE rol = 'admin'
+       ORDER BY id ASC
+       LIMIT 5`
+    );
+
+    if (rows.length === 0) {
+      console.warn('[ADMIN-DIAG] No hay cuentas con rol admin en la tabla usuarios.');
+      return;
+    }
+
+    console.log(`[ADMIN-DIAG] Cuentas admin detectadas: ${rows.length}`);
+    rows.forEach((u) => {
+      console.log(`[ADMIN-DIAG] id=${u.id} email=${u.email} rol=${u.rol} activo=${u.activo}`);
+    });
+  } catch (err) {
+    console.error('[ADMIN-DIAG] Error consultando admins:', err.message);
+  }
 }
 
 // ------------------------------------------------------------
@@ -886,17 +989,23 @@ app.post('/api/citas', async (req, res) => {
 
 /** Middleware: verifica que el usuarioId es administrador */
 async function requireAdmin(req, res, next) {
-  const id = req.body?.adminId || req.query?.adminId;
-  if (!id) return errorRes(res, 401, 'Se requiere identificación de administrador.');
+  const rawId = req.body?.adminId ?? req.query?.adminId;
+  const id = Number(rawId);
+  if (!Number.isInteger(id) || id <= 0) {
+    console.warn('[ADMIN-AUTH] adminId ausente o invalido:', rawId);
+    return errorRes(res, 401, 'Se requiere identificación de administrador.');
+  }
   try {
     const [rows] = await pool.query(
       'SELECT rol FROM usuarios WHERE id = ? AND activo = 1', [id]
     );
     if (rows.length === 0 || rows[0].rol !== 'admin') {
+      console.warn('[ADMIN-AUTH] Acceso denegado para adminId:', id);
       return errorRes(res, 403, 'Acceso denegado. Área exclusiva de administración.');
     }
     next();
   } catch (err) {
+    console.error('[ADMIN-AUTH] Error interno:', err.message);
     return errorRes(res, 500, 'Error interno del servidor.');
   }
 }
@@ -905,24 +1014,38 @@ async function requireAdmin(req, res, next) {
 //  POST /api/login-admin  – Login exclusivo de administrador
 // ============================================================
 app.post('/api/login-admin', async (req, res) => {
-  const { email, password } = req.body;
+  const email = String(req.body?.email || '').trim().toLowerCase();
+  const password = String(req.body?.password || '');
   if (!email || !password) return errorRes(res, 400, 'El correo y la contraseña son obligatorios.');
   if (!emailValido(email)) return errorRes(res, 400, 'Correo no válido.');
 
   try {
     const [filas] = await pool.query(
-      'SELECT id, nombre, email, telefono, password_hash, rol, activo FROM usuarios WHERE email = ?',
-      [email.toLowerCase()]
+      `SELECT id, nombre, email, telefono, password_hash, rol, activo
+       FROM usuarios
+       WHERE LOWER(TRIM(email)) = ?
+       LIMIT 1`,
+      [email]
     );
-    if (filas.length === 0) return errorRes(res, 401, 'Correo o contraseña incorrectos.');
+    if (filas.length === 0) {
+      console.warn(`[LOGIN-ADMIN] Usuario no encontrado: ${email}`);
+      return errorRes(res, 401, 'Correo o contraseña incorrectos. Si no existe administrador, configura ADMIN_EMAIL y ADMIN_PASSWORD en Railway.');
+    }
 
     const u = filas[0];
-    if (!u.activo) return errorRes(res, 403, 'Cuenta desactivada.');
+    if (!u.activo) {
+      console.warn(`[LOGIN-ADMIN] Cuenta desactivada: id=${u.id}, email=${u.email}`);
+      return errorRes(res, 403, 'Cuenta desactivada.');
+    }
     if (u.rol !== 'admin') {
+      console.warn(`[LOGIN-ADMIN] Rol no admin: id=${u.id}, email=${u.email}, rol=${u.rol}`);
       return errorRes(res, 403, 'Acceso exclusivo para el administrador del sitio.');
     }
     const ok = await bcrypt.compare(password, u.password_hash);
-    if (!ok) return errorRes(res, 401, 'Correo o contraseña incorrectos.');
+    if (!ok) {
+      console.warn(`[LOGIN-ADMIN] Password invalida: id=${u.id}, email=${u.email}`);
+      return errorRes(res, 401, 'Correo o contraseña incorrectos.');
+    }
 
     console.log(`[LOGIN-ADMIN] Admin #${u.id} – ${u.email}`);
     return okRes(res, {
