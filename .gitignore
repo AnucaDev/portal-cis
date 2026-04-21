@@ -18,6 +18,7 @@ package-lock.json
 # ── Credenciales y accesos sensibles ─────────
 acceso_admin.txt
 generar_hash.txt
+private/
 
 # ── Editores e IDEs ──────────────────────────
 .vscode/settings.json
