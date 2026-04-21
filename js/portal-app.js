@@ -75,7 +75,7 @@
 
     // Ordenar: próximas ascendente, pasadas descendente
     const proximas = citas
-      .filter(c => c.estado === 'proxima' || c.estado === 'pendiente')
+      .filter(c => c.estado === 'proxima' || c.estado === 'pendiente' || c.estado === 'confirmada')
       .sort((a, b) => a.fecha.localeCompare(b.fecha));
 
     const pasadas = citas
@@ -99,6 +99,7 @@
       let estadoClass  = '';
       if (c.estado === 'proxima')   { estadoLabel = 'ESTA SEMANA'; estadoClass = ''; }
       if (c.estado === 'pendiente') { estadoLabel = 'PROGRAMADA';  estadoClass = 'pending'; }
+      if (c.estado === 'confirmada') { estadoLabel = 'CONFIRMADA'; estadoClass = 'pending'; }
       if (c.estado === 'realizada') { estadoLabel = 'REALIZADA';   estadoClass = 'apt-status--done'; }
       if (c.estado === 'cancelada') { estadoLabel = 'CANCELADA';   estadoClass = 'apt-status--cancelled'; }
 
@@ -249,7 +250,7 @@
     const elSesiones = document.getElementById('resumenSesiones');
     const elTotal    = document.getElementById('resumenTotal');
 
-    const proximas     = citas.filter(c => c.estado === 'proxima' || c.estado === 'pendiente').length;
+    const proximas     = citas.filter(c => c.estado === 'proxima' || c.estado === 'pendiente' || c.estado === 'confirmada').length;
     const sesionesCont = sesiones.length;
     const totalAbonado = (facturacion || []).reduce((s, i) => s + i.importe, 0);
 
@@ -532,10 +533,40 @@
     return CIS_DATA;
   }
 
-  function init() {
+  async function cargarCitasUsuario(email) {
+    if ((window.API_BASE === null || typeof window.API_BASE === 'undefined') || !email) return [];
+
+    try {
+      const res = await fetch(`${window.API_BASE}/api/mis-citas?email=${encodeURIComponent(email)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.mensaje || 'No se pudieron cargar las citas');
+
+      const citas = (data.citas || []).map((c) => ({
+        id: c.id,
+        fecha: c.fecha,
+        hora: c.hora,
+        duracion: '50 min',
+        profesional: c.profesional_nombre || 'Profesional',
+        especialidad: c.profesional_especialidad || 'Consulta',
+        consulta: c.motivo || 'Consulta',
+        estado: c.estado || 'pendiente',
+      }));
+
+      return citas;
+    } catch (err) {
+      console.error('[PORTAL-CITAS]', err.message);
+      return [];
+    }
+  }
+
+  async function init() {
     if (!document.getElementById('portalApp')) return;
 
     const datos = cargarDatos();
+    if (sessionStorage.getItem('cis_usuario') && datos?.usuario?.email) {
+      datos.citas = await cargarCitasUsuario(datos.usuario.email);
+    }
+
     renderPerfil(datos.usuario);
     renderResumen(datos.citas, datos.sesiones, datos.facturacion);
     renderCitas(datos.citas);

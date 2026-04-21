@@ -984,6 +984,34 @@ app.post('/api/citas', async (req, res) => {
 });
 
 // ============================================================
+//  GET /api/mis-citas  – Citas del usuario por email
+// ============================================================
+app.get('/api/mis-citas', async (req, res) => {
+  const { email } = req.query;
+  if (!email || !emailValido(email)) {
+    return errorRes(res, 400, 'Email requerido y valido.');
+  }
+
+  try {
+    const [citas] = await pool.query(
+      `SELECT c.id, c.fecha, c.hora, c.estado, c.motivo,
+              p.nombre AS profesional_nombre,
+              p.especialidad AS profesional_especialidad
+       FROM citas c
+       JOIN profesionales p ON p.id = c.profesional_id
+       WHERE LOWER(c.email) = LOWER(?)
+       ORDER BY c.fecha DESC, c.hora DESC`,
+      [email.trim()]
+    );
+
+    return okRes(res, { citas });
+  } catch (err) {
+    console.error('[MIS-CITAS] Error:', err.message);
+    return errorRes(res, 500, 'Error interno del servidor.');
+  }
+});
+
+// ============================================================
 //  ÁREA DE ADMINISTRACIÓN
 // ============================================================
 
