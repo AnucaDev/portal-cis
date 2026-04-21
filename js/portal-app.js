@@ -12,7 +12,17 @@
 
   /** Formatea una fecha ISO "YYYY-MM-DD" como objeto con día y mes corto */
   function parseFecha(iso) {
-    const [y, m, d] = iso.split('-').map(Number);
+    const base = String(iso || '').slice(0, 10);
+    const [y, m, d] = base.split('-').map(Number);
+    if (!y || !m || !d) {
+      return {
+        dia: '--',
+        mes: '---',
+        diaSem: 'fecha',
+        texto: 'Fecha no disponible',
+        obj: new Date(),
+      };
+    }
     const date = new Date(y, m - 1, d);
     const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
     const diasSem = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
@@ -27,7 +37,9 @@
 
   /** Comprueba si una fecha ISO es hoy o en el futuro */
   function esFutura(iso) {
-    const [y, m, d] = iso.split('-').map(Number);
+    const base = String(iso || '').slice(0, 10);
+    const [y, m, d] = base.split('-').map(Number);
+    if (!y || !m || !d) return false;
     const fecha = new Date(y, m - 1, d);
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
@@ -41,6 +53,19 @@
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
+  }
+
+  function normalizarEstadoCita(cita) {
+    const raw = String(cita?.estado || '').trim().toLowerCase();
+
+    if (raw === 'proxima' || raw === 'pendiente' || raw === 'confirmada') return raw;
+    if (raw === 'programada' || raw === 'scheduled') return 'pendiente';
+    if (raw === 'confirmed') return 'confirmada';
+    if (raw === 'realizada' || raw === 'completada' || raw === 'done') return 'realizada';
+    if (raw === 'cancelada' || raw === 'cancelado') return 'cancelada';
+
+    // Fallback por fecha cuando el estado viene vacío o inesperado.
+    return esFutura(cita?.fecha) ? 'pendiente' : 'realizada';
   }
 
   /* ----------------------------------------------------------
@@ -73,12 +98,17 @@
     const counterBadge = document.getElementById('citasProximasBadge');
     if (!container) return;
 
+    const citasNormalizadas = (citas || []).map((c) => ({
+      ...c,
+      estado: normalizarEstadoCita(c),
+    }));
+
     // Ordenar: próximas ascendente, pasadas descendente
-    const proximas = citas
+    const proximas = citasNormalizadas
       .filter(c => c.estado === 'proxima' || c.estado === 'pendiente' || c.estado === 'confirmada')
       .sort((a, b) => a.fecha.localeCompare(b.fecha));
 
-    const pasadas = citas
+    const pasadas = citasNormalizadas
       .filter(c => c.estado === 'realizada' || c.estado === 'cancelada')
       .sort((a, b) => b.fecha.localeCompare(a.fecha));
 
@@ -250,7 +280,12 @@
     const elSesiones = document.getElementById('resumenSesiones');
     const elTotal    = document.getElementById('resumenTotal');
 
-    const proximas     = citas.filter(c => c.estado === 'proxima' || c.estado === 'pendiente' || c.estado === 'confirmada').length;
+    const citasNormalizadas = (citas || []).map((c) => ({
+      ...c,
+      estado: normalizarEstadoCita(c),
+    }));
+
+    const proximas     = citasNormalizadas.filter(c => c.estado === 'proxima' || c.estado === 'pendiente' || c.estado === 'confirmada').length;
     const sesionesCont = sesiones.length;
     const totalAbonado = (facturacion || []).reduce((s, i) => s + i.importe, 0);
 
