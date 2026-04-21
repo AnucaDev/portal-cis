@@ -21,10 +21,23 @@ Proyecto web del Centro de Intervencion Psicoeducativa con frontend estatico y A
 
 - `api/`: backend, scripts de inicializacion de BD
 - `html/`, `css/`, `js/`, `imagenes/`: frontend
-- `docs/`: documentacion funcional, guias e incidencias
-- `scripts/`: utilidades de mantenimiento y generacion
+- `docs/`: documentacion (tecnica, guias, incidencias y artifacts)
+- `scripts/`: utilidades de mantenimiento por tecnologia (`node`, `powershell`, `python`)
 - `tests/`: pruebas/manual tests auxiliares
 - `private/`: archivos sensibles locales (ignorado por Git)
+
+## Estructura de docs
+
+- `docs/tecnica/Proyecto_CIS_Documentacion.html`
+- `docs/guias/`
+- `docs/incidencias/`
+- `docs/artifacts/`
+
+## Estructura de scripts
+
+- `scripts/node/generar_ppt_deploy.js`
+- `scripts/powershell/` (fixes locales)
+- `scripts/python/fix_icon_emojis.py`
 
 ## Deploy Railway
 

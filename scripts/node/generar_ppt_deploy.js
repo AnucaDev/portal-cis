@@ -25,7 +25,7 @@ const fonts = {
   title: 'Lora'
 };
 
-const logoPath = path.join(__dirname, '..', 'imagenes', 'logo.svg');
+const logoPath = path.join(__dirname, '..', '..', 'imagenes', 'logo.svg');
 
 function addLogo(slide) {
   slide.addImage({
